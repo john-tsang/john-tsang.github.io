@@ -1,10 +1,10 @@
 ---
-layout: about
+layout: home
 author_profile: true
 classes: wide
 ---
 
-### Hello everyone! I'm John.
+## Hello everyone! I'm John.
 
 I am interested in survey sampling and machine learning methods.  
 
