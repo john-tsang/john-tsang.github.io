@@ -10,7 +10,7 @@ toc_icon: "fas fa-folder-open"
 toc_sticky: false
 ---
 
-## Simulation
+## Sampling Method
 
 
 ## Forecasting
