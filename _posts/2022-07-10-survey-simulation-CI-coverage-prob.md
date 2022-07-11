@@ -126,7 +126,7 @@ output.1
 </tr>
 </tbody></table>
 
-### Simulation: Weibull(shape = 1.5, scale = 1)
+### Simulation: Weibull(shape = 0.5, scale = 1)
 ```R
 set.seed(123)
 y.population.2 = rweibull(N, shape = 0.5, scale = 4)
