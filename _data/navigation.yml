@@ -2,12 +2,12 @@
 main:
   - title: "Home"
     url: "."
+  - title: "Notes"
+    url: /notes/
   - title: "Programs"
     url: /programs/
   - title: "Projects"
     url: /projects/
-  - title: "Blog"
-    url: /blog/
   - title: "Links"
     url: /links/
   #- title: "Quick-Start Guide"

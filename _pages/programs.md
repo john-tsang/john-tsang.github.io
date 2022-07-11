@@ -8,10 +8,18 @@ toc: true
 toc_label: "Some Programs"
 toc_icon: "fas fa-folder-open"
 toc_sticky: false
+tags:
+  - Python
+  - R
+  - Stata
+  - C++
+  - Excel VBA
 ---
 
 ## Sampling Method
-
+1. A Computationally Faster Package for Survey Sampling <br> (Work in progress) [Python, R]
+: This package will provide users with fast computation of estimators under the design-based and 
+  the model-based approach, using C/C++ and parallel programming techniques.
 
 ## Forecasting
 1. <a href="https://github.com/johntwk/Diebold-Mariano-Test">The Diebold-Mariano Test for Forecast Equivalance</a> [Python]

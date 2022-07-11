@@ -5,7 +5,7 @@ title: Useful Links
 use_math: true
 permalink: /links/
 toc: true
-toc_label: "Links"
+toc_label: "Useful Links"
 toc_icon: "fas fa-folder-open"
 toc_sticky: false
 ---
@@ -24,6 +24,11 @@ toc_sticky: false
 : In large scale surveys, often complex random mechanisms are used to select samples. 
   Estimations obtained from such samples must reflect the random mechanism to ensure accurate calculations. 
   `samplics` implements a set of sampling techniques for complex survey designs.
+  
+## `R` Markdown Template 
+1. <a href="http://dirk.eddelbuettel.com/code/pinp.html">pinp: Pinp is not PNAS</a> [R]
+: The template provided by the PNAS Article template in the `rticles` package makes 
+  it very easy and convenient to create attractive looking two-column papers.
 
 ## Favourite Music
 1. Beethoven Concerto pour piano No.3
