@@ -1,7 +1,7 @@
 ---
 author_profile: true
 title: Poisson Process
-published: true
+published: false
 use_math: true
 toc: true
 toc_label: ""
