@@ -185,13 +185,13 @@ output.2
 
 ## Observations
 * As sample size $$n$$ increases, in general, the magnitudes of the relative biases 
-  (the second and the fourth columns) of both point estimators $\bar{y}$ and $\hat{Var}[\bar{y}]$ 
+  (the second and the fourth columns) of both point estimators $$\bar{y}$$ and $$\hat{Var}[\bar{y}]$$ 
   decrease and approach 0. This phenomenon is consistent with law of large numbers. 
   The magnitudes of biases of both estimators shrinks towards zero as we collect more samples.
   
 * The point estimates from $$\hat{Var}[\bar{y}]$$ decrease as sample size $$n$$ increases, reflecting 
   the reduction in the typical error of $$\bar{y}$$ as we collect more samples. 
-  In other words, $$\bar{y}$$ is more accurate with more samples (note that $\bar{y}$ is unbiased, so variance is equal to MSE). 
+  In other words, $$\bar{y}$$ is more accurate with more samples (note that $$\bar{y}$$ is unbiased, so variance is equal to MSE). 
   This observation is consistent with the above point.
   
 * The coverage probability of the two-sided confidence interval of $$\bar{Y}$$ increases and approaches 0.95 as $$n$$ increases.
