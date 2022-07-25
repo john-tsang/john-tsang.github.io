@@ -1,7 +1,7 @@
 ---
 author_profile: true
 title: Poisson Process
-published: false
+published: true
 use_math: true
 toc: true
 toc_label: ""
@@ -15,7 +15,15 @@ tags:
 ---
 
 # What is a Poisson Process?
-A Poisson process with 
+A Poisson process with $f(x) = \sum_{k=1}^{K}\alpha_{k}$
+
+$$
+\begin{bmatrix}
+1 & x & x^2 \\
+1 & y & y^2 \\
+1 & z & z^2 \\
+\end{bmatrix}
+$$
 
 # Homogeneous Poisson Process
 
