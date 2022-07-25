@@ -1,6 +1,6 @@
 ---
 author_profile: true
-layout: posts
+layout: tags
 title: Notes
 use_math: true
 permalink: /notes/
@@ -9,3 +9,4 @@ toc_label: "Notes"
 toc_icon: "fas fa-folder-open"
 toc_sticky: false
 ---
+This page contains some short notes I wrote for quick reads.
