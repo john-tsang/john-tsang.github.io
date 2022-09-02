@@ -16,25 +16,37 @@ tags:
   - OpenMP
   - Survey Sampling
 ---
+> **Result**: On average, using `Rcpp` can be about 4.5 times faster than just using `R`.
 
-This note aims to demonstrate the use of `Rcpp` and `OpenMP` to accelerate computation in `R`.
+This note compares the computational time required by `R` with and without the use of `Rcpp` to complete the following tasks 1000 times each.
+
+1. Task 1: Simple random sampling with replacement
+
+2. Task 2: A simulation study for the Hansen-Hurwitz estimator
 
 # `Rcpp` for Performance in `R`
-[`Rcpp`](https://www.rcpp.org/) is an `R` package that allows for using the more efficient yet more 
-complicated [`C++`](https://en.wikipedia.org/wiki/C%2B%2B) with `R` to improve computational time.
-The improvement is usually tremendous, so it is worthwhile to consider [`Rcpp`](https://www.rcpp.org/) for large computational tasks.
+[`Rcpp`](https://www.rcpp.org/) is an `R` package designed to provide an interface for `R` to use [`C++`](https://en.wikipedia.org/wiki/C%2B%2B) to accelerate computation. 
 
-# Task 1: Sampling with Replacement
-Consider the case of sampling with replacement (equal probability of being chosen) from a sample of size 100,000. 
+* **Advantage**: The improvement in computational time is usually tremendous, even when compared with highly optimized R base functions.
 
-Generate sampling frame:
+* **Disadvantage**: As its name suggests, Rcpp requires programs written in more complicated C++.
+
+> ***My opinion***: 
+> Using Rcpp may not be a good option for computationally small tasks because of C++’s complications. 
+> However, it is worthwhile to **consider Rcpp for computationally intensive jobs**.
+
+# Task 1: Simple random sampling with replacement
+Consider the case of simple random sampling with replacement (equal probability of being chosen) from a sample of size 100,000. 
+
+Generate the sampling frame: a $$N(0,1)$$ sample of size 100 000.
 ```R
 set.seed(123465)
 n.elem = 100000
 frame1 = rnorm(n.elem)
 ```
 ## R Vs. Rcpp: Rcpp Faster
-`sample_with_replacement.cpp`: 
+
+* The `C++` code in the source file `sample_with_replacement.cpp`: 
 ```c++
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
@@ -42,30 +54,31 @@ frame1 = rnorm(n.elem)
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export()]]
 arma::vec sample_w_replacement(arma::vec x, const int size) {
-  //int size = x.n_rows;
   arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
   arma::vec rt = x.elem(index);
   return rt;
 }
 ```
+The function `sample_w_replacement` takes a numeric vector from `R` and the sample size of the random sample 
+to be selected and returns a vector of the random sample.
 
-Load the library `Rcpp` and the `C++` source file.
+
+* We load the library `Rcpp` and the `C++` source file in `R`.
 ```R
 library(Rcpp)
 sourceCpp("sample_with_replacement.cpp")
 ```
 
 
-Runtime comparison: `sample` in `R` Vs. `sample_w_replacement` with `Rcpp`
+* Runtime comparison by library `microbenchmark` in `R`: Base `R` function `sample` Vs. `sample_w_replacement` with `Rcpp`
 ```R
 library(microbenchmark)
 microbenchmark(
   r = sample(frame1, n.elem, replace = TRUE),
   cpp = sample_w_replacement(frame1, n.elem),
-  times = 1e3
+  times = 1000L
 )
 ```
-
 *Output:*
 ```
 Unit: milliseconds
@@ -73,8 +86,7 @@ Unit: milliseconds
     r 7.2487 8.14530 9.007408 8.63335 9.3552 34.6576  1000
   cpp 1.3987 1.62835 2.294706 1.92230 2.5577 23.6820  1000
 ```
-
-The `Rcpp` implementation of sampling with replacement runs faster than `sample` in `R`.
+> **Result**: The `Rcpp` implementation of simple random sampling with replacement runs faster than `sample` in `R`.
 
 # Task 2: A Simulation Study for the Hansen-Hurwitz Estimator
 
