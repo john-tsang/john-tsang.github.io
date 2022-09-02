@@ -136,4 +136,4 @@ Unit: milliseconds
  1398.4725  1000
   469.8277  1000
 ```
-The `Rcpp` implementation of sampling with replacement runs faster than `sample` in `R`.
+The `Rcpp` implementation runs faster than `sample` in `R`.
