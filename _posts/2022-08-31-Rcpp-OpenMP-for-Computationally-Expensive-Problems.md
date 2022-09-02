@@ -173,3 +173,9 @@ Unit: milliseconds
   cpp 167.6805 187.8227 224.2952 204.1834  231.8116  492.5134   100
 ```
 > **Result**: The `Rcpp` implementation runs faster.
+
+# Further Discussion
+
+* The function `sample` comes from base `R`, so this function is already optimized. If the `R` function we compare is a user-defined function, the improvement from `Rcpp` will be much more significant.
+
+* In the next note, I will discuss how to use `OpenMP` to accelerate `Rcpp` computation. 
