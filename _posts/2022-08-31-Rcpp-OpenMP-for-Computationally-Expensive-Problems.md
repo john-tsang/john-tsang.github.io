@@ -13,7 +13,6 @@ tags:
   - R
   - Rcpp
   - C++
-  - OpenMP
   - Survey Sampling
 ---
 > **Result**: On average, using `Rcpp` can be about 4.5 times faster than just using `R`.
@@ -54,9 +53,9 @@ frame1 = rnorm(n.elem)
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export()]]
 arma::vec sample_w_replacement(arma::vec x, const int size) {
-  arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
-  arma::vec rt = x.elem(index);
-  return rt;
+	arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
+	arma::vec rt = x.elem(index);
+	return rt;
 }
 ```
 The function `sample_w_replacement` takes a numeric vector from `R` and the sample size of the random sample 
@@ -74,13 +73,13 @@ sourceCpp("sample_with_replacement.cpp")
 ```R
 library(microbenchmark)
 microbenchmark(
-  r = sample(frame1, n.elem, replace = TRUE),
-  cpp = sample_w_replacement(frame1, n.elem),
-  times = 1000L
+	r = sample(frame1, n.elem, replace = TRUE),
+	cpp = sample_w_replacement(frame1, n.elem),
+	times = 1000L
 )
 ```
 *Output:*
-```
+```R
 Unit: milliseconds
  expr    min      lq     mean  median     uq     max neval
     r 7.2487 8.14530 9.007408 8.63335 9.3552 34.6576  1000
@@ -90,62 +89,87 @@ Unit: milliseconds
 
 # Task 2: A Simulation Study for the Hansen-Hurwitz Estimator
 
-## The Hansen-Hurwitz (HH) Estimator
+This simulation study verifies the unbiasedness of the Hansen-Hurwitz estimator
+by checking if the relative bias is close to 0.
 
+## The Hansen-Hurwitz (HH) Estimator
+The Hansen-Hurwitz estimator of the population mean:
+
+$$
+\hat{\bar{Y}}_{HH} = \dfrac{1}{n}\sum_{k \in U}Q_ky_k
+$$
+
+where $$Q_k$$ is the number of times that unit $$k$$ is selected in a sample
+of size $$n$$, $$k = 1, 2, 3, \ldots, N$$. 
+
+An `R` function for the HH estimator:
 ```R
 HH.estimator = function(sample.selected) {
-  return(sum(sample.selected) / length(sample.selected))
+  return(mean(sample.selected))
 }
 ```
 
-## `R` Vs. `Rcpp` Vs. `Rcpp` & `OpenMP`
-`R`:
+## R Vs. Rcpp: Rcpp Faster
+Consider $$n = 1000$$.
+
+* An `R` function for the simulation.
 ```R
 r.sim = function(R, n, frame1) {
-  results = 0
-  for (i in 1:R) {
-    sample.selected = sample(frame1, n, replace = TRUE)
-    results = results + HH.estimator(sample.selected)
-  }
-  abs.rel.bias = (results/R - mean(frame1)) / mean(frame1) * 100
-  abs.rel.bias
+	results = 0
+	for (i in 1:R) {
+		sample.selected = sample(frame1, n, replace = TRUE)
+		results = results + HH.estimator(sample.selected)
+	}
+	rel.bias = (results/R - mean(frame1)) / mean(frame1) * 100
+	rel.bias
 }
 ```
 
-`C++`:
+* The `C++` code in the source file `sample_with_replacement.cpp`: 
 ```c++
-double HH_estimator(arma::vec sample) {
-  return(arma::mean(sample));
+#include <RcppArmadillo.h>
+#include <Rcpp.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::export()]]
+arma::vec sample_w_replacement(arma::vec x, const int size) {
+	arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
+	arma::vec rt = x.elem(index);
+	return rt;
 }
-
+double HH_estimator(arma::vec sample) {
+	return(arma::mean(sample));
+}
 // [[Rcpp::export()]]
 double rcpp_sim(const int R, const int n, arma::vec frame1) {
-  double results = 0;
-  for (int i = 0; i < R; ++i) {
-    arma::vec sample_selected = sample_w_replacement(frame1, n);
-    results += HH_estimator(sample_selected);
-  }
-  double abs_rel_bias = (results/R - arma::mean(frame1)) / arma::mean(frame1) * 100;
-  return abs_rel_bias;
+	double results = 0;
+	for (int i = 0; i < R; ++i) {
+		arma::vec sample_selected = sample_w_replacement(frame1, n);
+		results += HH_estimator(sample_selected);
+	}
+	double rel_bias = (results/R - arma::mean(frame1)) / arma::mean(frame1) * 100;
+	return rel_bias;
 }
 ```
-Runtime comparison:
+* We load the library `Rcpp` and the `C++` source file in `R`.
 ```R
-microbenchmark(
-  r = r.sim(1000, 10000, frame1),
-  cpp = rcpp_sim(1000, 10000, frame1),
-  times = 1000L
-)
+library(Rcpp)
+sourceCpp("sample_with_replacement.cpp")
 ```
 
+* Runtime comparison: a sample size of $$n = 1000$$.
+```R
+microbenchmark(
+	r = r.sim(1000, 10000, frame1),
+	cpp = rcpp_sim(1000, 10000, frame1),
+	times = 100L
+)
+```
 *Output:*
 ```
 Unit: milliseconds
-         expr      min        lq      mean    median       uq
-            r 794.5302 1001.8973 1077.5736 1051.0002 1148.692
-          cpp 183.4560  219.5191  248.2792  240.3830  269.853
-       max neval
- 1398.4725  1000
-  469.8277  1000
+ expr      min       lq     mean   median        uq       max neval
+    r 776.0121 848.7606 975.4696 911.4063 1059.3342 1833.8863   100
+  cpp 167.6805 187.8227 224.2952 204.1834  231.8116  492.5134   100
 ```
-The `Rcpp` implementation runs faster than `sample` in `R`.
+> **Result**: The `Rcpp` implementation runs faster.
