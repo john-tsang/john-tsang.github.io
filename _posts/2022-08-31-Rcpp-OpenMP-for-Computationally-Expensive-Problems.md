@@ -1,7 +1,7 @@
 ---
 author_profile: true
 published: true
-title: "Accelerate `R` with `Rcpp`: Sampling with Replacement and the Hansen-Hurwitz Estimator [Draft]"
+title: "Accelerate `R` with `Rcpp`: Sampling with Replacement and the Hansen-Hurwitz Estimator"
 use_math: true
 toc: true
 toc_label: ""
