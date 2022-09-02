@@ -157,7 +157,7 @@ library(Rcpp)
 sourceCpp("sample_with_replacement.cpp")
 ```
 
-* Runtime comparison: a sample size of $$n = 1000$$.
+* Runtime comparison: a sample size of $$n = 10000$$.
 ```R
 microbenchmark(
 	r = r.sim(1000, 10000, frame1),
