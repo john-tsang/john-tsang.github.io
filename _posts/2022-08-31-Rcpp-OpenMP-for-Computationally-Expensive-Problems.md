@@ -14,6 +14,7 @@ tags:
   - Rcpp
   - C++
   - Survey Sampling
+  - Simulation
 ---
 > **Result**: On average, using `Rcpp` can be about 4.5 times faster than just using `R`.
 
@@ -52,8 +53,9 @@ frame1 = rnorm(n.elem)
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export()]]
-arma::vec sample_w_replacement(arma::vec x, const int size) {
-	arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
+arma::vec sample_w_replacement(arma::vec x, const unsigned int sample_size) {
+	const unsigned int x_size = x.size();
+	arma::uvec index = arma::randi<arma::uvec>(sample_size, arma::distr_param(0,x_size-1));
 	arma::vec rt = x.elem(index);
 	return rt;
 }
@@ -110,7 +112,7 @@ HH.estimator = function(sample.selected) {
 ```
 
 ## R Vs. Rcpp: Rcpp Faster
-Consider $$n = 1000$$.
+Consider the case when the sample size is 10 000 ($$n = 10000$$) and the number of replication is 1000 ($$R = 1000$$).
 
 * An `R` function for the simulation.
 ```R
@@ -132,8 +134,9 @@ r.sim = function(R, n, frame1) {
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export()]]
-arma::vec sample_w_replacement(arma::vec x, const int size) {
-	arma::uvec index = arma::randi<arma::uvec>(size, arma::distr_param(0,size-1));
+arma::vec sample_w_replacement(arma::vec x, const unsigned int sample_size) {
+	const unsigned int x_size = x.size();
+	arma::uvec index = arma::randi<arma::uvec>(sample_size, arma::distr_param(0,x_size-1));
 	arma::vec rt = x.elem(index);
 	return rt;
 }
@@ -168,9 +171,9 @@ microbenchmark(
 *Output:*
 ```
 Unit: milliseconds
- expr      min       lq     mean   median        uq       max neval
-    r 776.0121 848.7606 975.4696 911.4063 1059.3342 1833.8863   100
-  cpp 167.6805 187.8227 224.2952 204.1834  231.8116  492.5134   100
+ expr      min        lq      mean    median        uq       max neval
+    r 953.0094 1296.0009 1373.9247 1350.9042 1440.9796 2040.6367   100
+  cpp 212.0845  317.4542  356.2386  343.5164  386.2789  789.7178   100
 ```
 > **Result**: The `Rcpp` implementation runs faster.
 
