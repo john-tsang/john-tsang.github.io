@@ -1,7 +1,7 @@
 ---
 author_profile: true
-published: true
-title: "Accelerate `R` with `Rcpp`: Sampling with Replacement and the Hansen-Hurwitz Estimator"
+published: false
+title: "Accelerate `R` with `Rcpp` and `OpenMP`: Using a Simulation Study of Survey with Systematic Non-responses as an Example"
 use_math: true
 toc: true
 toc_label: ""
@@ -13,37 +13,42 @@ tags:
   - R
   - Rcpp
   - C++
+  - OpenMP
   - Survey Sampling
   - Simulation
 ---
-> **Result**: On average, using `Rcpp` can be about 4.5 times faster than just using `R`.
+> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation by more than 40 times in `R`.
 
-This note compares the computational time required by `R` with and without the use of `Rcpp` to complete the following tasks 1000 times each.
 
-1. Task 1: Simple random sampling with replacement
-
-2. Task 2: A simulation study for the Hansen-Hurwitz estimator
-
-# `Rcpp` for Performance in `R`
-[`Rcpp`](https://www.rcpp.org/) is an `R` package designed to provide an interface for `R` to use [`C++`](https://en.wikipedia.org/wiki/C%2B%2B) to accelerate computation. 
-
-* **Advantage**: The improvement in computational time is usually tremendous, even when compared with highly optimized R base functions.
-
-* **Disadvantage**: As its name suggests, Rcpp requires programs written in more complicated C++.
-
-> ***My opinion***: 
-> Using Rcpp may not be a good option for computationally small tasks because of C++’s complications. 
-> However, it is worthwhile to **consider Rcpp for computationally intensive jobs**.
-
-# Task 1: Simple random sampling with replacement
-Consider the case of simple random sampling with replacement (equal probability of being chosen) from a sample of size 100,000. 
-
-Generate the sampling frame: a $$N(0,1)$$ sample of size 100 000.
+Through replicating a simple simulation study by Yap (2020), I illustrate biases arising from unit non-responses in 
+* regression coefficients,
+* the Horvitz-Thompson (HT) estimator and 
+* the variance estimator of the HT estimator.
+  
+Population Generation
 ```R
-set.seed(123465)
-n.elem = 100000
-frame1 = rnorm(n.elem)
+set.seed(123456)
+N = 1000
+x = runif(N, 0, 4)
+e = rnorm(N, 0, 1)
+y = 1 + 2*x + e
 ```
+
+Generate indices to indicate responses and non-responses.
+```R
+tmp = y - x - 2
+
+pop.response.index = which((tmp > -1) & (tmp < 1))
+```
+
+```R
+Unit: milliseconds
+ expr      min       lq      mean   median       uq      max neval
+    r 125.1075 156.6180 175.05922 170.9831 195.2950 217.5027    10
+    a   5.8688   5.9633   7.29118   7.1128   8.3732   9.2335    10
+    b   3.3365   3.6061   4.04880   3.7416   4.0403   6.1066    10
+```
+
 ## R Vs. Rcpp: Rcpp Faster
 
 * The `C++` code in the source file `sample_with_replacement.cpp`: 
