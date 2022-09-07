@@ -8,13 +8,6 @@
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::plugins(openmp)]]
 
-
-arma::uvec SRSWOR_index(arma::vec x, const unsigned int sample_size) {
-	const unsigned int x_size = x.size();
-	arma::uvec index = arma::randperm<arma::uvec>(x_size, sample_size);
-	return index;
-}
-
 arma::vec fastLm(const arma::vec & y, const arma::mat & X) {
     arma::vec coef = arma::solve(X, y); 
 	return coef;
