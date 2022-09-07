@@ -18,7 +18,7 @@ tags:
   - Simulation
   - Parallel Computing
 ---
-> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation more than 50 times in `R`.
+> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation about 70 times in `R`.
 
 This note replicates a simple simulation study[^1] to illustrate biases arising from systematic unit non-responses.
 Specifically, I study biases in 
@@ -264,11 +264,11 @@ microbenchmark(
 ```R
 Unit: milliseconds
   expr      min         lq       mean     median         uq       max neval
-     r 968.6829 1025.48565 1099.06844 1072.30850 1156.19195 1693.2711   100
-  rcpp  43.7732   47.30925   48.77792   48.50755   49.54735   62.9101   100
- rcpp2  24.2858   25.66295   26.39552   26.33015   27.06870   33.2617   100
+     r 993.5976 1087.29510 1250.67629 1159.58185 1393.59430 2131.4919   100
+  rcpp  45.5461   48.05155   51.66997   51.06960   53.92465   67.7078   100
+ rcpp2  24.2971   25.74590   26.57889   26.39155   27.18675   31.1330   100
 ```
-> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation more than 50 ($$1693.2711 / 33.2617 \approx 50.9$$) times in `R`.
+> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation about 70 ($$2131.4919 / 31.1330 \approx 68.5$$) times in `R`.
 
 
 # Footnote
