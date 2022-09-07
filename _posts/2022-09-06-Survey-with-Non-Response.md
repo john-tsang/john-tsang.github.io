@@ -1,6 +1,6 @@
 ---
 author_profile: true
-published: false
+published: true
 title: "Accelerate `R` with `Rcpp` and `OpenMP`: Using a Simulation Study of Survey with Systematic Non-responses as an Example"
 use_math: true
 toc: true
@@ -16,16 +16,29 @@ tags:
   - OpenMP
   - Survey Sampling
   - Simulation
+  - Parallel Computing
 ---
-> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation by more than 40 times in `R`.
+> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation more than 50 times in `R`.
 
-
-Through replicating a simple simulation study by Yap (2020), I illustrate biases arising from unit non-responses in 
-* regression coefficients,
+This note replicates a simple simulation study[^1] to illustrate biases arising from systematic unit non-responses.
+Specifically, I study biases in 
+* estimates of regression coefficients,
 * the Horvitz-Thompson (HT) estimator and 
 * the variance estimator of the HT estimator.
-  
-Population Generation
+
+# Simulation
+
+## Simulation Setup
+
+### 1. Population Generation
+A bivariate fixed population $$(X, Y)$$ of size $$N = 1000$$ comes from the following procedures:
+* Generate the covariate $$X$$ from $$U[0, 4]$$.
+* Generate the disturbance term $$e$$ from $$N(0,1)$$.
+* The survey response variable $$Y = 1 + 2X + e$$.
+
+If a unit satisfy the condition $$-1 < y - x - 2 < 1$$, then this unit is a response. Otherwise, the unit is a non-response.
+
+The `R` code for generating the fixed population:
 ```R
 set.seed(123456)
 N = 1000
@@ -34,156 +47,239 @@ e = rnorm(N, 0, 1)
 y = 1 + 2*x + e
 ```
 
-Generate indices to indicate responses and non-responses.
+The `R` code to generate a vector of indices of responses.
 ```R
 tmp = y - x - 2
 
 pop.response.index = which((tmp > -1) & (tmp < 1))
 ```
+The response rate is about 40%.
 
+### 2. Simulation Procedure
+Repeat the following two steps $$R = 1000$$ times.
+1. Draw a 10%-sample (size $$n = 100$$) from the fixed population according to simple random sampling without replacement (SRSWOR).
+
+2. Ignoring non-responses, I use only response units to 
+   * fit a simple linear regression and record the two estimated coefficients,
+   * calculate the HT estimator ,
+   * estimate the variance of the HT estimator and
+   * record the number of responses.
+
+Using these recorded statistics, I calculate the Monte-Carlo relative biases and the Monte-Carlo number of responses.
+
+## Simulation Results
+The following data table summarize simulation results.
 ```R
-Unit: milliseconds
- expr      min       lq      mean   median       uq      max neval
-    r 125.1075 156.6180 175.05922 170.9831 195.2950 217.5027    10
-    a   5.8688   5.9633   7.29118   7.1128   8.3732   9.2335    10
-    b   3.3365   3.6061   4.04880   3.7416   4.0403   6.1066    10
+                     Full Response Non-response
+rel.bias.intercept            6.33         71.4
+rel.bias.slope               -1.51        -37.4
+rel.bias.HT.mean            0.0268        -30.7
+rel.bias.var.HT.mean        0.0932        -37.3
+num.response                   100         40.2
+```
+> **Simulation Results**:<br>
+> If non-responses are ignored, the non-response biases are huge for estimated regression coefficients (intercept and slope), the HT estimator 
+>   and the variance estimator of the HT estimator. 
+
+# Simulation Programs
+
+## R only
+* Variables setup:
+```R
+n = 100
+population = list(
+  intercept = 1,
+  slope     = 2,
+  mean      = mean(y),
+  var       = (1 - n/N) * var(y) / n
+)
+non.response = list(
+  intercept       = numeric(length=R),
+  slope           = numeric(length=R),
+  HT.mean         = numeric(length=R),
+  var.HT.mean     = numeric(length=R),
+  num.response    = numeric(length=R)
+)
 ```
 
-## R Vs. Rcpp: Rcpp Faster
+* Helper function to record statistics from each replication:
+```R
+SRSWOR = function(r, sample.x, sample.y, rt.lst) {
+  model = lm(formula = "sample.y ~ sample.x")
+  rt.lst$intercept[r] = as.numeric(model$coefficients[1])
+  rt.lst$slope[r] = as.numeric(model$coefficients[2])
+  rt.lst$HT.mean[r] = mean(sample.y)
+  rt.lst$var.HT.mean[r] = (1 - length(sample.y)/N) * var(sample.y) / length(sample.y)
+  rt.lst$num.response[r] = length(sample.y)
 
-* The `C++` code in the source file `sample_with_replacement.cpp`: 
-```c++
-#include <RcppArmadillo.h>
-#include <Rcpp.h>
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::export()]]
-arma::vec sample_w_replacement(arma::vec x, const unsigned int sample_size) {
-	const unsigned int x_size = x.size();
-	arma::uvec index = arma::randi<arma::uvec>(sample_size, arma::distr_param(0,x_size-1));
-	arma::vec rt = x.elem(index);
-	return rt;
+  return(rt.lst)
 }
 ```
-The function `sample_w_replacement` takes a numeric vector from `R` and the sample size of the random sample 
-to be selected and returns a vector of the random sample.
 
+* Helper function to calculate Monte-Carlo statistics from the simulation:
+```R
+cal.statistics = function(lst) {
+	rel.bias.intercept = (mean(lst$intercept) - population$intercept) / population$intercept * 100
+	rel.bias.slope = (mean(lst$slope) - population$slope) / population$slope * 100
+	rel.bias.HT.mean = (mean(lst$HT.mean) - population$mean) / population$mean * 100
+	rel.bias.var.HT.mean = (mean(lst$var.HT.mean) - population$var) / population$var * 100
+	num.response = mean(lst$num.response)
+	rt.lst = list(
+		rel.bias.intercept = rel.bias.intercept,
+		rel.bias.slope     = rel.bias.slope,
+		rel.bias.HT.mean   = rel.bias.HT.mean,
+		rel.bias.var.HT.mean = rel.bias.var.HT.mean,
+		num.response = num.response)
+	return(rt.lst)
+}
+```
+
+* The function to run the simulation:
+```R
+r.sim = function(R = 1000) {
+	for (r in 1:R) {
+		sample.index = sample(index, size = n, replace = FALSE)
+    
+		# SRSWOR with non-response
+		sample.response.index = intersect(pop.response.index, sample.index)
+		sample.y = y[sample.response.index]
+		sample.x = x[sample.response.index]
+		non.response = SRSWOR(r, sample.x, sample.y, non.response)
+	}
+	non.response.stat = cal.statistics(non.response)
+	return(non.response.stat)
+}
+```
+
+## Rcpp
+* The `C++` function for simulation in the source file `simulation.cpp`:
+```c++
+// [[Rcpp::export()]]
+Rcpp::List simulation(const unsigned int R,
+						const unsigned int sample_size,
+						arma::vec y, arma::vec x,
+						arma::uvec response_index) {
+	// WARNING: indices for arrays in C++ starts from 0,
+	//          but those in R starts from 1
+	response_index = response_index - 1;
+	const unsigned int N = y.n_rows;
+
+	Simulation_results s(R, N, arma::mean(y));
+	
+	for (unsigned int r = 0; r < R; ++r) {
+		arma::uvec sample_index = arma::randperm<arma::uvec>(N, sample_size);
+		arma::uvec sample_response_index = arma::intersect(response_index, sample_index);
+		arma::vec sample_y = y.elem(sample_response_index);
+		arma::vec sample_x = x.elem(sample_response_index);
+		s.simulation(r, sample_x, sample_y);
+	}
+	s.compute_results();
+	
+	return Rcpp::List::create(
+	  Rcpp::_["intercept"] = s.MC_intercept,
+      Rcpp::_["slope"] = s.MC_slope,
+	  Rcpp::_["HT.mean"] = s.MC_HT_mean,
+	  Rcpp::_["var.HT.mean"] = s.MC_var_HT_mean,
+	  Rcpp::_["num.response"] = s.MC_num_response
+	);
+}
+```
+Download the full `c++` source file [simulation.cpp](link).
 
 * We load the library `Rcpp` and the `C++` source file in `R`.
 ```R
 library(Rcpp)
-sourceCpp("sample_with_replacement.cpp")
+sourceCpp("simulation.cpp")
 ```
 
+## Rcpp with OpenMP
+* Usually, when we run a program, the program is executed line by line (serially). The above two ([R only](#r-only) and [Rcpp](#rcpp)) are serial programs.
 
-* Runtime comparison by library `microbenchmark` in `R`: Base `R` function `sample` Vs. `sample_w_replacement` with `Rcpp`
+* Because each simulation replication **does not affect** the other, running iterations simultaneously instead of serially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing). 
+  
+* The `C++` function for simulation in the source file `simulation.cpp`:
+```c++
+/ [[Rcpp::export()]]
+Rcpp::List simulation_p(const unsigned int R, 
+						const unsigned int sample_size, 
+						arma::vec y, arma::vec x,
+						arma::uvec response_index) {
+	// WARNING: indices for arrays in C++ starts from 0,
+	//          but those in R starts from 1
+	response_index = response_index - 1;
+	const unsigned int N = y.n_rows;
+	Simulation_results s(R, N, arma::mean(y));
+	
+	omp_set_num_threads(5);
+  
+    # pragma omp parallel for
+	for (unsigned int r = 0; r < R; ++r) {
+		arma::uvec sample_index = arma::randperm<arma::uvec>(N, sample_size);
+		arma::uvec sample_response_index = arma::intersect(response_index, sample_index);
+		arma::vec sample_y = y.elem(sample_response_index);
+		arma::vec sample_x = x.elem(sample_response_index);
+		s.simulation(r, sample_x, sample_y);
+	}
+	s.compute_results();
+
+	return Rcpp::List::create(
+	  Rcpp::_["intercept"] = s.MC_intercept,
+      Rcpp::_["slope"] = s.MC_slope,
+	  Rcpp::_["HT.mean"] = s.MC_HT_mean,
+	  Rcpp::_["var.HT.mean"] = s.MC_var_HT_mean,
+	  Rcpp::_["num.response"] = s.MC_num_response
+	);
+}
+```
+Download the full `c++` source file [simulation.cpp](link).
+
+* We load the library `Rcpp` and the `C++` source file in `R`.
+```R
+library(Rcpp)
+Sys.setenv("PKG_CXXFLAGS" = "-fopenmp")
+Sys.setenv("PKG_LIBS" = "-fopenmp")
+sourceCpp("simulation.cpp")
+```
+The two lines `Sys.setenv("PKG_CXXFLAGS" = "-fopenmp")` and `Sys.setenv("PKG_LIBS" = "-fopenmp")` 
+are to fag the use of `OpenMP` for the `g++` compiler.
+
+# R Vs. Rcpp Vs. Rcpp with OpenMP: Rcpp with OpenMP Fastest
+* Runtime comparison:
 ```R
 library(microbenchmark)
 microbenchmark(
-	r = sample(frame1, n.elem, replace = TRUE),
-	cpp = sample_w_replacement(frame1, n.elem),
-	times = 1000L
+  r = {for (r in 1:1000) {
+    sample.index = sample(index, size = n, replace = FALSE)
+    
+    # SRSWOR with non-response
+    sample.response.index = intersect(pop.response.index, sample.index)
+    sample.y = y[sample.response.index]
+    sample.x = x[sample.response.index]
+    non.response = SRSWOR(r, sample.x, sample.y, non.response)
+  }
+  non.response.stat = cal.statistics(non.response)
+  },
+  rcpp = {simulation(R = 1000, sample_size = 100, 
+                  y = y, x = x,
+                  response_index = pop.response.index)},
+  rcpp2 = {simulation_p(R = 1000, sample_size = 100, 
+                  y = y, x = x,
+                  response_index = pop.response.index)},
+  times = 100L
 )
 ```
-*Output:*
+*Output*:
 ```R
 Unit: milliseconds
- expr    min      lq     mean  median     uq     max neval
-    r 7.2487 8.14530 9.007408 8.63335 9.3552 34.6576  1000
-  cpp 1.3987 1.62835 2.294706 1.92230 2.5577 23.6820  1000
+  expr      min         lq       mean     median         uq       max neval
+     r 968.6829 1025.48565 1099.06844 1072.30850 1156.19195 1693.2711   100
+  rcpp  43.7732   47.30925   48.77792   48.50755   49.54735   62.9101   100
+ rcpp2  24.2858   25.66295   26.39552   26.33015   27.06870   33.2617   100
 ```
-> **Result**: The `Rcpp` implementation of simple random sampling with replacement runs faster than `sample` in `R`.
+> **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation more than 50 ($$1693.2711 / 33.2617 \approx 50.9$$) times in `R`.
 
-# Task 2: A Simulation Study for the Hansen-Hurwitz Estimator
 
-This simulation study verifies the unbiasedness of the Hansen-Hurwitz estimator
-by checking if the relative bias is close to 0.
+# Footnote
+[^1]: The simulation setup comes from [Yap (2020)](https://iase-web.org/documents/papers/rt2020/IASE2020%20Roundtable%2039_YAP.pdf?1610923749).
 
-## The Hansen-Hurwitz (HH) Estimator
-The Hansen-Hurwitz estimator of the population mean:
 
-$$
-\hat{\bar{Y}}_{HH} = \dfrac{1}{n}\sum_{k \in U}Q_ky_k
-$$
-
-where $$Q_k$$ is the number of times that unit $$k$$ is selected in a sample
-of size $$n$$, $$k = 1, 2, 3, \ldots, N$$. 
-
-An `R` function for the HH estimator:
-```R
-HH.estimator = function(sample.selected) {
-  return(mean(sample.selected))
-}
-```
-
-## R Vs. Rcpp: Rcpp Faster
-Consider the case when the sample size is 10 000 ($$n = 10000$$) and the number of replication is 1000 ($$R = 1000$$).
-
-* An `R` function for the simulation.
-```R
-r.sim = function(R, n, frame1) {
-	results = 0
-	for (i in 1:R) {
-		sample.selected = sample(frame1, n, replace = TRUE)
-		results = results + HH.estimator(sample.selected)
-	}
-	rel.bias = (results/R - mean(frame1)) / mean(frame1) * 100
-	rel.bias
-}
-```
-
-* The `C++` code in the source file `sample_with_replacement.cpp`: 
-```c++
-#include <RcppArmadillo.h>
-#include <Rcpp.h>
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::export()]]
-arma::vec sample_w_replacement(arma::vec x, const unsigned int sample_size) {
-	const unsigned int x_size = x.size();
-	arma::uvec index = arma::randi<arma::uvec>(sample_size, arma::distr_param(0,x_size-1));
-	arma::vec rt = x.elem(index);
-	return rt;
-}
-double HH_estimator(arma::vec sample) {
-	return(arma::mean(sample));
-}
-// [[Rcpp::export()]]
-double rcpp_sim(const int R, const int n, arma::vec frame1) {
-	double results = 0;
-	for (int i = 0; i < R; ++i) {
-		arma::vec sample_selected = sample_w_replacement(frame1, n);
-		results += HH_estimator(sample_selected);
-	}
-	double rel_bias = (results/R - arma::mean(frame1)) / arma::mean(frame1) * 100;
-	return rel_bias;
-}
-```
-* We load the library `Rcpp` and the `C++` source file in `R`.
-```R
-library(Rcpp)
-sourceCpp("sample_with_replacement.cpp")
-```
-
-* Runtime comparison: a sample size of $$n = 10000$$.
-```R
-microbenchmark(
-	r = r.sim(1000, 10000, frame1),
-	cpp = rcpp_sim(1000, 10000, frame1),
-	times = 100L
-)
-```
-*Output:*
-```
-Unit: milliseconds
- expr      min        lq      mean    median        uq       max neval
-    r 953.0094 1296.0009 1373.9247 1350.9042 1440.9796 2040.6367   100
-  cpp 212.0845  317.4542  356.2386  343.5164  386.2789  789.7178   100
-```
-> **Result**: The `Rcpp` implementation runs faster.
-
-# Further Discussion
-
-* The function `sample` comes from base `R`, so this function is already optimized. If the `R` function we compare is a user-defined function, the improvement from `Rcpp` will be much more significant.
-
-* In the next note, I will discuss how to use `OpenMP` to accelerate `Rcpp` computation. 
