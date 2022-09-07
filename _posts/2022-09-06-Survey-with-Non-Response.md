@@ -79,8 +79,7 @@ rel.bias.var.HT.mean        0.0932        -37.3
 num.response                   100         40.2
 ```
 > **Simulation Results**:<br>
-> If non-responses are ignored, the non-response biases are huge for estimated regression coefficients (intercept and slope), the HT estimator 
->   and the variance estimator of the HT estimator. 
+> If non-responses are ignored, the non-response biases are huge for estimated regression coefficients (intercept and slope), the HT estimator and the estimator of the variance of the HT estimator.
 
 # Simulation Programs
 
@@ -201,7 +200,7 @@ sourceCpp("simulation.cpp")
 * The exhibit below explains the shorter runtime when using `OpenMP`. ![serial-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/serial-parallel.png)
 * The `C++` function for simulation in the source file `simulation.cpp` uses 5 processors at the same time:
 ```c++
-/ [[Rcpp::export()]]
+// [[Rcpp::export()]]
 Rcpp::List simulation_p(const unsigned int R, 
 						const unsigned int sample_size, 
 						arma::vec y, arma::vec x,
