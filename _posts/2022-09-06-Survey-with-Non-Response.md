@@ -52,7 +52,6 @@ y = 1 + 2*x + e
 The `R` code to generate a vector of indices of responses.
 ```R
 tmp = y - x - 2
-
 pop.response.index = which((tmp > -1) & (tmp < 1))
 ```
 The response rate is about 40%.
@@ -197,8 +196,9 @@ sourceCpp("simulation.cpp")
 ## Rcpp with OpenMP
 * Usually, when we run a program, the program is executed line by line (serially). The above two ([R only](#r-only) and [Rcpp](#rcpp)) are serial programs.
 
-* Because each simulation replication **does not affect** the other, running iterations simultaneously instead of serially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing). 
+* Because each simulation replication **does not affect** the other, running iterations simultaneously instead of serially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing).
 
+* The exhibit below explains the shorter runtime when using `OpenMP`. ![serial-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/serial-parallel.png)
 * The `C++` function for simulation in the source file `simulation.cpp` uses 5 processors at the same time:
 ```c++
 / [[Rcpp::export()]]
@@ -243,24 +243,14 @@ Sys.setenv("PKG_LIBS" = "-fopenmp")
 sourceCpp("simulation.cpp")
 ```
 The two lines `Sys.setenv("PKG_CXXFLAGS" = "-fopenmp")` and `Sys.setenv("PKG_LIBS" = "-fopenmp")` 
-are to fag the use of `OpenMP` for the `g++` compiler.
+are to flag the use of `OpenMP` for the `g++` compiler.
 
 # R Vs. Rcpp Vs. Rcpp with OpenMP: Rcpp with OpenMP Fastest
 * Runtime comparison:
 ```R
 library(microbenchmark)
 microbenchmark(
-  r = {for (r in 1:1000) {
-    sample.index = sample(index, size = n, replace = FALSE)
-    
-    # SRSWOR with non-response
-    sample.response.index = intersect(pop.response.index, sample.index)
-    sample.y = y[sample.response.index]
-    sample.x = x[sample.response.index]
-    non.response = SRSWOR(r, sample.x, sample.y, non.response)
-  }
-  non.response.stat = cal.statistics(non.response)
-  },
+  r = {r.sim()},
   rcpp = {simulation(R = 1000, sample_size = 100, 
                   y = y, x = x,
                   response_index = pop.response.index)},
