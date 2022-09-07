@@ -26,6 +26,8 @@ Specifically, I study biases in
 * the Horvitz-Thompson (HT) estimator and 
 * the variance estimator of the HT estimator.
 
+Through this simulation study, I show that using `Rcpp` with `OpenMP` can accelerate computation more than 50 times in `R`.
+
 # Simulation
 
 ## Simulation Setup
@@ -196,8 +198,8 @@ sourceCpp("simulation.cpp")
 * Usually, when we run a program, the program is executed line by line (serially). The above two ([R only](#r-only) and [Rcpp](#rcpp)) are serial programs.
 
 * Because each simulation replication **does not affect** the other, running iterations simultaneously instead of serially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing). 
-  
-* The `C++` function for simulation in the source file `simulation.cpp`:
+
+* The `C++` function for simulation in the source file `simulation.cpp` uses 5 processors at the same time:
 ```c++
 / [[Rcpp::export()]]
 Rcpp::List simulation_p(const unsigned int R, 
