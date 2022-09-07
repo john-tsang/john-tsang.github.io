@@ -184,7 +184,7 @@ Rcpp::List simulation(const unsigned int R,
 	);
 }
 ```
-Download the full `c++` source file [simulation.cpp](link).
+Download the full `c++` source file [simulation.cpp](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/simulation.cpp).
 
 * We load the library `Rcpp` and the `C++` source file in `R`.
 ```R
@@ -231,7 +231,7 @@ Rcpp::List simulation_p(const unsigned int R,
 	);
 }
 ```
-Download the full `c++` source file [simulation.cpp](link).
+Download the full `c++` source file [simulation.cpp](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/simulation.cpp).
 
 * We load the library `Rcpp` and the `C++` source file in `R`.
 ```R
