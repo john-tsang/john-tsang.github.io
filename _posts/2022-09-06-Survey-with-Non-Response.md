@@ -1,7 +1,7 @@
 ---
 author_profile: true
 published: true
-title: "Accelerate `R` with `Rcpp` and `OpenMP`: Using a Simulation Study of Survey with Systematic Non-responses as an Example"
+title: "An Example to Accelerate `R` with `Rcpp` and `OpenMP`: a Simulation Study of Survey with Systematic Non-responses"
 use_math: true
 toc: true
 toc_label: ""
@@ -26,7 +26,7 @@ Specifically, I study biases in
 * the Horvitz-Thompson (HT) estimator and 
 * the variance estimator of the HT estimator.
 
-Through this simulation study, I show that using `Rcpp` with `OpenMP` can accelerate computation more than 50 times in `R`.
+Through this simulation study, I show that using `Rcpp` with `OpenMP` can accelerate computation more than 70 times in `R`.
 
 # Simulation
 
