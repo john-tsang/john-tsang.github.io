@@ -21,7 +21,7 @@ tags:
 > **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation about 70 times in `R`.
 
 This note uses a simple simulation study[^1] as an example to show that using `Rcpp` with `OpenMP` can significantly accelerate computation in `R`.
-The simulation illustrate biases arising from systematic unit non-responses.
+The simulation illustrates biases arising from systematic unit non-responses.
 Specifically, I study biases in 
 * estimates of regression coefficients,
 * the Horvitz-Thompson (HT) estimator and 
