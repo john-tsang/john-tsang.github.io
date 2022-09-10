@@ -20,13 +20,12 @@ tags:
 ---
 > **Result**: Using `Rcpp` with `OpenMP` can accelerate the simulation about 70 times in `R`.
 
-This note replicates a simple simulation study[^1] to illustrate biases arising from systematic unit non-responses.
+This note uses a simple simulation study[^1] as an example to show that using `Rcpp` with `OpenMP` can significantly accelerate computation in `R`.
+The simulation illustrate biases arising from systematic unit non-responses.
 Specifically, I study biases in 
 * estimates of regression coefficients,
 * the Horvitz-Thompson (HT) estimator and 
 * the variance estimator of the HT estimator.
-
-Through this simulation study, I show that using `Rcpp` with `OpenMP` can accelerate computation more than 70 times in `R`.
 
 # Simulation
 
@@ -193,11 +192,11 @@ sourceCpp("simulation.cpp")
 ```
 
 ## Rcpp with OpenMP
-* Usually, when we run a program, the program is executed line by line (serially). The above two ([R only](#r-only) and [Rcpp](#rcpp)) are serial programs.
+* Usually, when we run a program, the program is executed line by line (squentially). The above two ([R only](#r-only) and [Rcpp](#rcpp)) are sequential programs.
 
-* Because each simulation replication **does not affect** the other, running iterations simultaneously instead of serially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing).
+* Because each simulation replication **does not affect** the other, running iterations simultaneously instead of sequentially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing).
 
-* The exhibit below explains the shorter runtime when using `OpenMP`. ![serial-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/serial-parallel.png)
+* The exhibit below explains the shorter runtime when using `OpenMP`. ![sequential-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/sequential-parallel.png)
 * The `C++` function for simulation in the source file `simulation.cpp` uses 5 processors at the same time:
 ```c++
 // [[Rcpp::export()]]
