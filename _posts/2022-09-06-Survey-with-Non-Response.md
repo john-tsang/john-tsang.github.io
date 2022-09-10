@@ -196,7 +196,7 @@ sourceCpp("simulation.cpp")
 
 * Because each simulation replication **does not affect** the other, running iterations simultaneously instead of sequentially **does not change the simulation outcome**. Therefore, I use `OpenMP` to assign each computer processor to run simulation replications in parallel to save computation time. This type of programming is called [**parallel programming**](https://en.wikipedia.org/wiki/Parallel_computing).
 
-* The exhibit below explains the shorter runtime when using `OpenMP`. ![sequential-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/sequential-parallel.png)
+* The exhibit below explains the shorter runtime when using `OpenMP`[^2]. ![sequential-parallel.png](https://raw.githubusercontent.com/john-tsang/john-tsang.github.io/main/notes/2022-09-06/sequential-parallel.png)
 * The `C++` function for simulation in the source file `simulation.cpp` uses 5 processors at the same time:
 ```c++
 // [[Rcpp::export()]]
@@ -271,5 +271,6 @@ Unit: milliseconds
 
 # Footnote
 [^1]: The simulation setup comes from [Yap (2020)](https://iase-web.org/documents/papers/rt2020/IASE2020%20Roundtable%2039_YAP.pdf?1610923749).
+[^2]: The `OpenMP` supports shared-memory multi-platform parallel programming in Fortran, C and C++. For details, refer to the official page for [OpenMP](https://www.openmp.org/).
 
 
