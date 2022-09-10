@@ -104,14 +104,14 @@ non.response = list(
 * Helper function to record statistics from each replication:
 ```R
 SRSWOR = function(r, sample.x, sample.y, rt.lst) {
-  model = lm(formula = "sample.y ~ sample.x")
-  rt.lst$intercept[r] = as.numeric(model$coefficients[1])
-  rt.lst$slope[r] = as.numeric(model$coefficients[2])
-  rt.lst$HT.mean[r] = mean(sample.y)
-  rt.lst$var.HT.mean[r] = (1 - length(sample.y)/N) * var(sample.y) / length(sample.y)
-  rt.lst$num.response[r] = length(sample.y)
-
-  return(rt.lst)
+	model = lm(formula = "sample.y ~ sample.x")
+	rt.lst$intercept[r] = as.numeric(model$coefficients[1])
+	rt.lst$slope[r] = as.numeric(model$coefficients[2])
+	rt.lst$HT.mean[r] = mean(sample.y)
+	rt.lst$var.HT.mean[r] = (1 - length(sample.y)/N) * var(sample.y) / length(sample.y)
+	rt.lst$num.response[r] = length(sample.y)
+	
+	return(rt.lst)
 }
 ```
 
